@@ -2,13 +2,22 @@
 
 
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 import speech_recognition as sr
 import tempfile
 import os
 import uvicorn
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
+
+
+app.mount("/icons", StaticFiles(directory="icons"), name="icons")
+
+@app.get("/manifest.json")
+async def manifest():
+    return FileResponse("manifest.json", media_type="application/manifest+json")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def get_index():
@@ -18,7 +27,9 @@ async def get_index():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="manifest" href="manifest.json">
+        <link rel="manifest" href="/manifest.json">
+        <link rel="icon" href="/icons/icon-192.png">
+
 
         <title>Audio Recorder with Speech Recognition</title>
         <style>
