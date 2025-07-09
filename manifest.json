@@ -1,6 +1,6 @@
 {
   "name": "Voice Transcription App",
-  "short_name": "Transcriber",
+  "short_name": "Translator",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
