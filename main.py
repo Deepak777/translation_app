@@ -1,23 +1,21 @@
-
-
-
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 import speech_recognition as sr
 import tempfile
 import os
 import uvicorn
-from fastapi.staticfiles import StaticFiles
+from googletrans import Translator
 
 app = FastAPI()
+translator = Translator()
 
-
+# Serve icons and manifest
 app.mount("/icons", StaticFiles(directory="icons"), name="icons")
 
 @app.get("/manifest.json")
 async def manifest():
     return FileResponse("manifest.json", media_type="application/manifest+json")
-
 
 @app.get("/", response_class=HTMLResponse)
 async def get_index():
@@ -25,27 +23,47 @@ async def get_index():
     <!DOCTYPE html>
     <html lang="en">
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Audio Translator</title>
         <link rel="manifest" href="/manifest.json">
         <link rel="icon" href="/icons/icon-192.png">
-
-
-        <title>Audio Recorder with Speech Recognition</title>
         <style>
-            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-            button { font-size: 16px; padding: 10px 20px; margin: 10px; }
-            .red { background-color: #ff4444; color: white; }
+            body { font-family: Arial; text-align: center; padding: 40px; }
+            button { padding: 10px 20px; font-size: 16px; }
+            select, textarea { font-size: 16px; padding: 8px; }
         </style>
     </head>
     <body>
-        <h1>Audio Recorder with Speech Recognition</h1>
+        <h2>🎙️ Audio Recorder & Translator</h2>
+
+        <label>From: </label>
+        <select id="inputLang">
+            <option value="en">English</option>
+            <option value="ta">Tamil</option>
+            <option value="hi">Hindi</option>
+            <option value="fr">French</option>
+        </select>
+
+        <label> → To: </label>
+        <select id="outputLang">
+            <option value="ta">Tamil</option>
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+            <option value="fr">French</option>
+        </select>
+        <br/><br/>
+
         <button id="startBtn" disabled>Start Recording</button>
-        <button id="stopBtn" class="red">Stop & Process</button>
+        <button id="stopBtn" class="red">Stop & Translate</button>
         <p id="status"></p>
         <audio id="audio" controls></audio>
-        <h3>Recognition Result:</h3>
-        <textarea id="result" rows="4" cols="50"></textarea>
+
+        <h3>📝 Transcription:</h3>
+        <textarea id="result" rows="3" cols="50"></textarea>
+
+        <h3>🌐 Translation:</h3>
+        <textarea id="translated" rows="3" cols="50"></textarea>
 
         <script>
             let mediaRecorder;
@@ -56,28 +74,28 @@ async def get_index():
                     mediaRecorder = new MediaRecorder(stream);
                     document.getElementById("startBtn").disabled = false;
 
-                    mediaRecorder.ondataavailable = event => {
-                        audioChunks.push(event.data);
-                    };
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
 
                     mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-                        const audioUrl = URL.createObjectURL(audioBlob);
-                        document.getElementById("audio").src = audioUrl;
+                        const blob = new Blob(audioChunks, { type: 'audio/mp3' });
+                        document.getElementById("audio").src = URL.createObjectURL(blob);
 
                         const formData = new FormData();
-                        formData.append('audio_file', audioBlob, 'recording.mp3');
+                        formData.append('audio_file', blob, 'recording.mp3');
+                        formData.append('input_lang', document.getElementById("inputLang").value);
+                        formData.append('output_lang', document.getElementById("outputLang").value);
 
                         fetch('/upload-audio', {
                             method: 'POST',
                             body: formData
                         })
-                        .then(response => response.json())
+                        .then(res => res.json())
                         .then(data => {
-                            document.getElementById("result").value = data.transcription || data.error;
+                            document.getElementById("result").value = data.transcription || "Error";
+                            document.getElementById("translated").value = data.translation || "Error";
                         })
-                        .catch(error => {
-                            document.getElementById("result").value = "Error: " + error;
+                        .catch(err => {
+                            document.getElementById("result").value = "Error: " + err;
                         });
 
                         audioChunks = [];
@@ -100,21 +118,32 @@ async def get_index():
     """
 
 @app.post("/upload-audio")
-async def upload_audio(audio_file: UploadFile = File(...)):
+async def upload_audio(
+    audio_file: UploadFile = File(...),
+    input_lang: str = Form(...),
+    output_lang: str = Form(...)
+):
     try:
+        # Save mp3 to temp
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio:
             temp_audio.write(await audio_file.read())
-            temp_audio_path = temp_audio.name
+            mp3_path = temp_audio.name
 
-        wav_path = temp_audio_path.replace(".mp3", ".wav")
-        os.system(f'ffmpeg -i "{temp_audio_path}" "{wav_path}"')
+        # Convert to WAV using ffmpeg
+        wav_path = mp3_path.replace(".mp3", ".wav")
+        os.system(f'ffmpeg -y -i "{mp3_path}" "{wav_path}"')
 
+        # Speech recognition
         recognizer = sr.Recognizer()
         with sr.AudioFile(wav_path) as source:
             audio = recognizer.record(source)
-            text = recognizer.recognize_google(audio)
+            text = recognizer.recognize_google(audio, language=input_lang)
 
-        return {"transcription": text}
+        # Translate
+        translated_text = translator.translate(text, dest=output_lang).text
+
+        return {"transcription": text, "translation": translated_text}
+
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
