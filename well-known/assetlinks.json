@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.onrender.translation_app_dlq6.twa",
+        "sha256_cert_fingerprints": ["77:5A:82:8E:C3:16:5C:08:D6:61:D8:73:5A:FF:E3:0F:FC:E8:85:05:F0:70:DD:29:55:7C:17:BE:D9:02:C6:6B"]
+      }
+    }]
