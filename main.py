@@ -12,7 +12,7 @@ from deep_translator import GoogleTranslator
 app = FastAPI()
 
 # Serve icons and manifest
-app.mount("/icons", StaticFiles(directory="icons"), name="icons")
+# app.mount("/icons", StaticFiles(directory="icons"), name="icons")
 
 @app.get("/manifest.json")
 async def manifest():
@@ -26,19 +26,48 @@ async def get_index():
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>Audio Translator</title>
+        <title>🎙️ Audio Translator</title>
         <link rel="manifest" href="/manifest.json">
-        <link rel="icon" href="/icons/icon-192.png">
         <style>
-            body { font-family: Arial; text-align: center; padding: 40px; }
-            button { padding: 10px 20px; font-size: 16px; }
-            select, textarea { font-size: 16px; padding: 8px; }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: #f9f9f9;
+                padding: 40px;
+                text-align: center;
+                color: #333;
+            }
+            h2 { color: #2c3e50; }
+            button {
+                margin: 5px;
+                padding: 10px 20px;
+                font-size: 16px;
+                border-radius: 8px;
+                border: none;
+                background-color: #3498db;
+                color: white;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #2980b9;
+            }
+            textarea {
+                width: 90%;
+                padding: 10px;
+                font-size: 16px;
+                margin: 10px auto;
+                border-radius: 8px;
+            }
+            select {
+                font-size: 16px;
+                padding: 8px;
+                margin: 5px;
+            }
         </style>
     </head>
     <body>
         <h2>🎙️ Audio Recorder & Translator</h2>
 
-        <label>From: </label>
+        <label><b>From:</b></label>
         <select id="inputLang">
             <option value="en">English</option>
             <option value="ta">Tamil</option>
@@ -46,25 +75,30 @@ async def get_index():
             <option value="fr">French</option>
         </select>
 
-        <label> → To: </label>
+        <label><b>→ To:</b></label>
         <select id="outputLang">
             <option value="ta">Tamil</option>
             <option value="en">English</option>
             <option value="hi">Hindi</option>
             <option value="fr">French</option>
         </select>
-        <br/><br/>
+        <br><br>
 
-        <button id="startBtn" disabled>Start Recording</button>
-        <button id="stopBtn" class="red">Stop & Translate</button>
+        <button id="startBtn" disabled>▶️ Start Recording</button>
+        <button id="stopBtn">⏹️ Stop & Translate</button>
         <p id="status"></p>
-        <audio id="audio" controls></audio>
+
+        <audio id="audio" controls></audio><br/>
+
+        <button onclick="downloadAudio()">🎧 Download Audio</button>
+        <button onclick="downloadText('result', 'transcription.txt')">📝 Download Transcription</button>
+        <button onclick="downloadText('translated', 'translation.txt')">🌐 Download Translation</button>
 
         <h3>📝 Transcription:</h3>
-        <textarea id="result" rows="3" cols="50"></textarea>
+        <textarea id="result" rows="3" readonly></textarea>
 
         <h3>🌐 Translation:</h3>
-        <textarea id="translated" rows="3" cols="50"></textarea>
+        <textarea id="translated" rows="3" readonly></textarea>
 
         <script>
             let mediaRecorder;
@@ -79,7 +113,8 @@ async def get_index():
 
                     mediaRecorder.onstop = () => {
                         const blob = new Blob(audioChunks, { type: 'audio/mp3' });
-                        document.getElementById("audio").src = URL.createObjectURL(blob);
+                        const audioURL = URL.createObjectURL(blob);
+                        document.getElementById("audio").src = audioURL;
 
                         const formData = new FormData();
                         formData.append('audio_file', blob, 'recording.mp3');
@@ -113,10 +148,28 @@ async def get_index():
                 mediaRecorder.stop();
                 document.getElementById("status").innerText = "Processing...";
             });
+
+            function downloadAudio() {
+                const audio = document.getElementById("audio");
+                const a = document.createElement("a");
+                a.href = audio.src;
+                a.download = "recording.mp3";
+                a.click();
+            }
+
+            function downloadText(id, filename) {
+                const text = document.getElementById(id).value;
+                const blob = new Blob([text], { type: 'text/plain' });
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+            }
         </script>
     </body>
     </html>
     """
+
 
 @app.post("/upload-audio")
 async def upload_audio(
@@ -150,4 +203,4 @@ async def upload_audio(
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000)
