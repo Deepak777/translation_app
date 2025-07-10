@@ -3,3 +3,5 @@ uvicorn
 speechrecognition
 python-multipart
 deep-translator==1.11.4
+
+
