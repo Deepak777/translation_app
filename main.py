@@ -5,7 +5,25 @@ import speech_recognition as sr
 import tempfile
 import os
 import uvicorn
-from deep_translator import GoogleTranslator
+import requests
+
+def unofficial_google_translate(text, source_lang, target_lang):
+    try:
+        url = "https://translate.googleapis.com/translate_a/single"
+        params = {
+            "client": "gtx",
+            "sl": source_lang,
+            "tl": target_lang,
+            "dt": "t",
+            "q": text,
+        }
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        result = response.json()
+        return result[0][0][0]
+    except Exception as e:
+        return f"Translation error: {e}"
+
 
 app = FastAPI()
 
@@ -616,7 +634,8 @@ async def upload_audio(
             text = recognizer.recognize_google(audio, language=input_lang)
 
         # Translate
-        translated_text = GoogleTranslator(source=input_lang, target=output_lang).translate(text)
+        translated_text = unofficial_google_translate(text, input_lang, output_lang)
+
 
         return {"transcription": text, "translation": translated_text}
 
