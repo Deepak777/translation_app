@@ -7,22 +7,22 @@ import os
 import uvicorn
 import requests
 
-def unofficial_google_translate(text, source_lang, target_lang):
+def libretranslate(text, source_lang, target_lang):
     try:
-        url = "https://translate.googleapis.com/translate_a/single"
-        params = {
-            "client": "gtx",
-            "sl": source_lang,
-            "tl": target_lang,
-            "dt": "t",
+        url = "https://libretranslate.de/translate"
+        payload = {
             "q": text,
+            "source": source_lang,
+            "target": target_lang,
+            "format": "text"
         }
-        response = requests.get(url, params=params)
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(url, json=payload, headers=headers)
         response.raise_for_status()
-        result = response.json()
-        return result[0][0][0]
+        return response.json()["translatedText"]
     except Exception as e:
         return f"Translation error: {e}"
+
 
 
 app = FastAPI()
@@ -634,7 +634,8 @@ async def upload_audio(
             text = recognizer.recognize_google(audio, language=input_lang)
 
         # Translate
-        translated_text = unofficial_google_translate(text, input_lang, output_lang)
+        translated_text = libretranslate(text, input_lang, output_lang)
+
 
 
         return {"transcription": text, "translation": translated_text}
