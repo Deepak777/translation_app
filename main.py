@@ -5,23 +5,10 @@ import speech_recognition as sr
 import tempfile
 import os
 import uvicorn
-import requests
+from googletrans import Translator
 
-def libretranslate(text, source_lang, target_lang):
-    try:
-        url = "https://libretranslate.de/translate"
-        payload = {
-            "q": text,
-            "source": source_lang,
-            "target": target_lang,
-            "format": "text"
-        }
-        headers = {"Content-Type": "application/json"}
-        response = requests.post(url, json=payload, headers=headers)
-        response.raise_for_status()
-        return response.json()["translatedText"]
-    except Exception as e:
-        return f"Translation error: {e}"
+translator = Translator()
+
 
 
 
@@ -634,9 +621,8 @@ async def upload_audio(
             text = recognizer.recognize_google(audio, language=input_lang)
 
         # Translate
-        translated_text = libretranslate(text, input_lang, output_lang)
-
-
+        # Translate using googletrans
+        translated_text = translator.translate(text, src=input_lang, dest=output_lang).text
 
         return {"transcription": text, "translation": translated_text}
 
