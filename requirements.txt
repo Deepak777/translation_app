@@ -4,5 +4,6 @@ speechrecognition
 python-multipart
 googletrans==4.0.0rc1
 ffmpeg-python  
+deep-translator==1.11.4
 
 
