@@ -10,8 +10,6 @@ from googletrans import Translator
 translator = Translator()
 
 
-
-
 app = FastAPI()
 
 @app.get("/manifest.json")
@@ -623,6 +621,7 @@ async def upload_audio(
         # Translate
         # Translate using googletrans
         translated_text = translator.translate(text, src=input_lang, dest=output_lang).text
+
 
         return {"transcription": text, "translation": translated_text}
 
