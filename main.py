@@ -5,9 +5,17 @@ import speech_recognition as sr
 import tempfile
 import os
 import uvicorn
-from googletrans import Translator
 
-translator = Translator()
+import google.generativeai as genai
+
+genai.configure(api_key="YOUR_GEMINI_API_KEY")
+
+def gemini_translate(text, source_lang, target_lang):
+    model = genai.GenerativeModel("gemini-pro")
+    prompt = f"Translate the following text from {source_lang} to {target_lang}:\n\n{text}"
+    response = model.generate_content(prompt)
+    return response.text.strip()
+
 
 
 app = FastAPI()
@@ -619,7 +627,7 @@ async def upload_audio(
             text = recognizer.recognize_google(audio, language=input_lang)
 
         # Translate using googletrans
-        translated_text = translator.translate(text, src=input_lang, dest=output_lang).text
+        translated_text = gemini_translate(text, input_lang, output_lang)
 
 
         return {"transcription": text, "translation": translated_text}
