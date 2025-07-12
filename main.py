@@ -8,7 +8,7 @@ import uvicorn
 
 import google.generativeai as genai
 
-genai.configure(api_key="YOUR_GEMINI_API_KEY")
+genai.configure(api_key="AIzaSyBpArcU5RuYvhAk3c9X8nsZrXodjMlyxpo")
 
 def gemini_translate(text, source_lang, target_lang):
     model = genai.GenerativeModel("gemini-pro")
