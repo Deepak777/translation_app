@@ -7,9 +7,57 @@ import os
 import uvicorn
 
 import google.generativeai as genai
+import time
+from google.api_core import exceptions
+from google.generativeai import GenerativeModel, configure
 
-genai.configure(api_key="AIzaSyBpArcU5RuYvhAk3c9X8nsZrXodjMlyxpo")
+API_KEYS = [
+    "AIzaSyXXXXXXX1",
+    "AIzaSyXXXXXXX2",
+    # Add more keys
+]
 
+current_key_index = 0
+configure(api_key=API_KEYS[current_key_index])
+
+def rotate_api_key():
+    global current_key_index
+    current_key_index = (current_key_index + 1) % len(API_KEYS)
+    configure(api_key=API_KEYS[current_key_index])
+    print(f"🔁 Switched to API key {current_key_index + 1}")
+
+def get_gemini_model():
+    return GenerativeModel("gemini-1.5-flash")
+
+def handle_api_error(func):
+    def wrapper(*args, **kwargs):
+        max_retries = len(API_KEYS) * 2
+        for attempt in range(max_retries):
+            try:
+                return func(*args, **kwargs)
+
+            except exceptions.ResourceExhausted as e:
+                print(f"⚠️ Quota exhausted. Rotating... Attempt {attempt + 1}")
+                rotate_api_key()
+                time.sleep(getattr(e, "retry_delay", 5))
+
+            except exceptions.PermissionDenied as e:
+                print(f"🚫 Permission denied (maybe 429). Rotating... Attempt {attempt + 1}")
+                rotate_api_key()
+                time.sleep(10)
+
+            except Exception as e:
+                if "429" in str(e) or "quota" in str(e).lower():
+                    print(f"⚠️ Generic 429/quota error. Rotating... Attempt {attempt + 1}")
+                    rotate_api_key()
+                    time.sleep(5)
+                else:
+                    raise
+
+        raise Exception("❌ All API keys exhausted.")
+    return wrapper
+
+@handle_api_error
 def gemini_translate(text, target_lang):
     model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""
