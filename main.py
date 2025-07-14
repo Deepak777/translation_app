@@ -12,9 +12,21 @@ from google.api_core import exceptions
 from google.generativeai import GenerativeModel, configure
 
 API_KEYS = [
-    "AIzaSyXXXXXXX1",
-    "AIzaSyXXXXXXX2",
-    # Add more keys
+    "AIzaSyBpArcU5RuYvhAk3c9X8nsZrXodjMlyxpo",
+    "AIzaSyB-RajV0491qW08VDJlQDBRCKmd4UslYYA",  # Key 1
+    "AIzaSyB4cqEqYw1LwjuFry6dHa_1ih4pcbwYIig",
+    "AIzaSyD3iyBt46-ETNTAfLXIbhVXKHg4FyBZUA0",
+    "AIzaSyALibZJnx78ockCJQn41KOIA7q90bZxtbo",
+    "AIzaSyDLm1c3fnjUxbGoH0bockku1_G_1_EBkuM",
+    "AIzaSyCUzfYVJME2Z6xF0gO6gtVaDFHgzZB2FuM",
+    "AIzaSyAgjYlTj-e_sX_Bvi8MoX4z6CoCfEYy2hw",
+    "AIzaSyCZPlyOQei-h_7hQ1kzS7EwsYmTC2IFpwM",
+    "AIzaSyA52MEtu3duLlKFrSrjseTIZczNSBhVaEU",
+    "AIzaSyA4YfkLcPKY4oTAZQ15XKU0FIUwW3eNYow",
+    "AIzaSyCGTE0GmdmEN-hCz1Vh1pQo4O1ZH8IJEkY",
+    "AIzaSyCR7IbpxZl0GECaWk2aa4XmBiW8p_GtUvM",
+    "AIzaSyDvHnys_Vy-ExTJyOegKawUOnbIvmswbPU",
+    "AIzaSyAu_6iQS1yR0dYF_iFLCvUu_t-aSmd_QoQ"    # Key 3
 ]
 
 current_key_index = 0
