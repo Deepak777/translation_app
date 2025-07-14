@@ -10,11 +10,25 @@ import google.generativeai as genai
 
 genai.configure(api_key="AIzaSyBpArcU5RuYvhAk3c9X8nsZrXodjMlyxpo")
 
-def gemini_translate(text, source_lang, target_lang):
+def gemini_translate(text, target_lang):
     model = genai.GenerativeModel("gemini-pro")
-    prompt = f"Translate the following text from {source_lang} to {target_lang}:\n\n{text}"
+    prompt = f"""
+You are an expert in multilingual text normalization and translation.
+
+The following sentence contains **mixed languages** (like Tamil, English, Hindi, etc.), but some foreign words may be written **phonetically using a different script** (e.g., English words in Tamil letters, or Hindi in Latin script).
+
+Your task:
+1. Detect and restore phonetically written foreign words to their correct original spelling.
+2. Then translate the cleaned-up text into '{target_lang}'.
+
+Respond with only the final translated result.
+
+Here is the input:
+{text}
+"""
     response = model.generate_content(prompt)
     return response.text.strip()
+
 
 
 
@@ -627,7 +641,7 @@ async def upload_audio(
             text = recognizer.recognize_google(audio, language=input_lang)
 
         # Translate using googletrans
-        translated_text = gemini_translate(text, input_lang, output_lang)
+        translated_text = gemini_translate(text, output_lang)
 
 
         return {"transcription": text, "translation": translated_text}
