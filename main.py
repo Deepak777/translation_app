@@ -11,21 +11,21 @@ import google.generativeai as genai
 genai.configure(api_key="AIzaSyBpArcU5RuYvhAk3c9X8nsZrXodjMlyxpo")
 
 def gemini_translate(text, target_lang):
-    model = genai.GenerativeModel("gemini-pro")
+    model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""
-You are an expert in multilingual text normalization and translation.
+    You are an expert in multilingual text normalization and translation.
 
-The following sentence contains **mixed languages** (like Tamil, English, Hindi, etc.), but some foreign words may be written **phonetically using a different script** (e.g., English words in Tamil letters, or Hindi in Latin script).
+    The following sentence contains **mixed languages** (like Tamil, English, Hindi, etc.), but some foreign words may be written **phonetically using a different script** (e.g., English words in Tamil letters, or Hindi in Latin script).
 
-Your task:
-1. Detect and restore phonetically written foreign words to their correct original spelling.
-2. Then translate the cleaned-up text into '{target_lang}'.
+    Your task:
+    1. Detect and restore phonetically written foreign words to their correct original spelling.
+    2. Then translate the cleaned-up text into '{target_lang}'.
 
-Respond with only the final translated result.
+    Respond with only the final translated result.
 
-Here is the input:
-{text}
-"""
+    Here is the input:
+    {text}
+    """
     response = model.generate_content(prompt)
     return response.text.strip()
 
